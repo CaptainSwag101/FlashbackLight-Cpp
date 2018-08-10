@@ -24,13 +24,25 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    formats/wrd.cpp \
+    formats/spc.cpp \
+    formats/spcentry.cpp \
+    formats/stx.cpp \
+    scripteditor.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    formats/wrd.h \
+    formats/spc.h \
+    common.h \
+    formats/spcentry.h \
+    formats/stx.h \
+    scripteditor.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    scripteditor.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

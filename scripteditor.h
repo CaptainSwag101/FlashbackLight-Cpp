@@ -1,22 +1,29 @@
-#ifndef CODEEDITOR_H
-#define CODEEDITOR_H
+#ifndef SCRIPTEDITOR_H
+#define SCRIPTEDITOR_H
 
 #include <QWidget>
 
 namespace Ui {
-class CodeEditor;
+class ScriptEditor;
 }
 
-class CodeEditor : public QWidget
+class ScriptEditor : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit CodeEditor(QWidget *parent = nullptr);
-    ~CodeEditor();
+    explicit ScriptEditor(QWidget *parent = nullptr);
+    ~ScriptEditor();
+    void populateCodeList();
+
+
+public slots:
+    void on_codeList_activated(const QModelIndex &index);
+    void on_spinboxParamNum_valueChanged(int i);
+
 
 private:
-    Ui::CodeEditor *ui;
+    Ui::ScriptEditor *ui;
 };
 
-#endif // CODEEDITOR_H
+#endif // SCRIPTEDITOR_H
