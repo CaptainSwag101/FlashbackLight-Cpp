@@ -2,9 +2,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-QString dataPath = "D:\\Games\\SteamLibrary\\steamapps\\common\\Danganronpa V3 Killing Harmony\\data\\win\\wrd_script";
-SPC currentSPC;
-WRD currentWRD;
+SPC MainWindow::currentSPC;
+WRD MainWindow::currentWRD;
+QString MainWindow::dataPath = "D:\\Games\\SteamLibrary\\steamapps\\common\\Danganronpa V3 Killing Harmony\\data\\win\\wrd_script";
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -12,11 +13,20 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    scriptEditor = new ScriptEditor(this);
-    setCentralWidget(scriptEditor);
+    // Populate the opcode combobox with all known opcodes.
+    ui->cbOpcode->blockSignals(true);
+    ui->cbOpcode->clear();
+    for (const WRDCmd &known : KNOWN_CMDS)
+    {
+        ui->cbOpcode->addItem(known.name);
+    }
+    ui->cbOpcode->installEventFilter(this);
+    ui->cbOpcode->setEnabled(false);
+    ui->cbOpcode->blockSignals(false);
 
-
-    ui->centralWidget->setLayout(new QHBoxLayout());
+    ui->parameterScrollArea->widget()->setLayout(new QVBoxLayout());
+    // This is required to make the scroll area work properly when adding/removing widgets:
+    ui->parameterScrollArea->widget()->layout()->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
     createDockWindows();
 }
@@ -28,78 +38,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::createDockWindows()
 {
-    QDockWidget *dock = new QDockWidget(tr("File Browser"), this);
-    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    fileBrowser = new QTreeView(dock);
-    dock->setWidget(fileBrowser);
-    addDockWidget(Qt::LeftDockWidgetArea, dock);
-
-    fileBrowserModel = new QFileSystemModel(fileBrowser);
+    fileBrowserModel = new QFileSystemModel(ui->fileBrowser);
     fileBrowserModel->setRootPath(dataPath);
-    fileBrowser->setModel(fileBrowserModel);
-    fileBrowser->setRootIndex(fileBrowserModel->index(dataPath));
-    connect(fileBrowser, &QTreeView::activated, this, &MainWindow::on_FileBrowser_activated);
+    ui->fileBrowser->setModel(fileBrowserModel);
+    ui->fileBrowser->setRootIndex(fileBrowserModel->index(dataPath));
+    ui->fileBrowser->setColumnWidth(0, 250);
+    ui->fileBrowser->hideColumn(1);
+    ui->fileBrowser->hideColumn(2);
+    ui->fileBrowser->hideColumn(3);
+    connect(ui->fileBrowser, &QTreeView::activated, this, &MainWindow::on_fileBrowser_activated);
+    //viewMenu->addAction(dock->toggleViewAction());
 
 
-    dock = new QDockWidget(tr("Script Browser"), this);
-    scriptBrowser = new QListWidget(dock);
-    dock->setWidget(scriptBrowser);
-    addDockWidget(Qt::LeftDockWidgetArea, dock);
-
-    scriptBrowser->addItem("(No SPC file currently loaded)");
-    connect(scriptBrowser, &QListWidget::activated, this, &MainWindow::on_ScriptBrowser_activated);
+    ui->scriptBrowser->addItem("(No SPC file currently loaded)");
+    connect(ui->scriptBrowser, &QListWidget::activated, this, &MainWindow::on_scriptBrowser_activated);
+    //viewMenu->addAction(dock->toggleViewAction());
 
 
-    dock = new QDockWidget(tr("Preview"), this);
-    previewer = new QFrame(dock);
-    dock->setWidget(previewer);
-    addDockWidget(Qt::RightDockWidgetArea, dock);
-
-    //connect(scriptEditor, &ScriptEditor::codeList_activated, this, &MainWindow::on_codeList_activated);
-
-    /*
-    customerList = new QListWidget(dock);
-    customerList->addItems(QStringList()
-            << "John Doe, Harmony Enterprises, 12 Lakeside, Ambleton"
-            << "Jane Doe, Memorabilia, 23 Watersedge, Beaton"
-            << "Tammy Shea, Tiblanka, 38 Sea Views, Carlton"
-            << "Tim Sheen, Caraba Gifts, 48 Ocean Way, Deal"
-            << "Sol Harvey, Chicos Coffee, 53 New Springs, Eccleston"
-            << "Sally Hobart, Tiroli Tea, 67 Long River, Fedula");
-    dock->setWidget(customerList);
-    addDockWidget(Qt::RightDockWidgetArea, dock);
-    viewMenu->addAction(dock->toggleViewAction());
-
-    dock = new QDockWidget(tr("Paragraphs"), this);
-    paragraphsList = new QListWidget(dock);
-    paragraphsList->addItems(QStringList()
-            << "Thank you for your payment which we have received today."
-            << "Your order has been dispatched and should be with you "
-               "within 28 days."
-            << "We have dispatched those items that were in stock. The "
-               "rest of your order will be dispatched once all the "
-               "remaining items have arrived at our warehouse. No "
-               "additional shipping charges will be made."
-            << "You made a small overpayment (less than $5) which we "
-               "will keep on account for you, or return at your request."
-            << "You made a small underpayment (less than $1), but we have "
-               "sent your order anyway. We'll add this underpayment to "
-               "your next bill."
-            << "Unfortunately you did not send enough money. Please remit "
-               "an additional $. Your order will be dispatched as soon as "
-               "the complete amount has been received."
-            << "You made an overpayment (more than $5). Do you wish to "
-               "buy more items, or should we return the excess to you?");
-    dock->setWidget(paragraphsList);
-    addDockWidget(Qt::RightDockWidgetArea, dock);
-    viewMenu->addAction(dock->toggleViewAction());
-
-    connect(customerList, &QListWidget::currentTextChanged,
-            this, &MainWindow::insertCustomer);
-    connect(paragraphsList, &QListWidget::currentTextChanged,
-            this, &MainWindow::addParagraph);
-    */
+    // TODO: Set up the Previewer widget here once we implement it.
 }
+
 
 void MainWindow::loadSPCFile(QString path)
 {
@@ -119,8 +77,8 @@ void MainWindow::loadSPCFile(QString path)
             scriptFiles << entry.filename;
         }
     }
-    scriptBrowser->clear();
-    scriptBrowser->addItems(scriptFiles);
+    ui->scriptBrowser->clear();
+    ui->scriptBrowser->addItems(scriptFiles);
 }
 
 void MainWindow::saveSPCFile(QString path)
@@ -139,7 +97,8 @@ void MainWindow::loadScriptData(QString name)
             break;
         }
     }
-    scriptEditor->populateCodeList();
+
+    initializeCodeList();
 }
 
 void MainWindow::saveScriptData(QString name)
@@ -147,23 +106,151 @@ void MainWindow::saveScriptData(QString name)
 
 }
 
-void MainWindow::loadCmdInfo(const int index)
-{
-    // Populate the opcode ComboBox with all known opcodes
-    QStringList knownCmdNames;
-    for (const WRDCmd &known : KNOWN_CMDS)
-    {
 
+void MainWindow::initializeCodeList()
+{
+    ui->codeList->clear();
+    for (int row = 0; row < currentWRD.code.count(); ++row)
+    {
+        ui->codeList->addItem(QString());
+        updateCodeListEntry(row);
     }
 
+    ui->cbOpcode->setEnabled(false);
+    clearParameterArea();
 }
 
-void MainWindow::saveCmdInfo(const int index)
+void MainWindow::updateCodeListEntry(int index)
 {
+    const WRDCmd cmd = currentWRD.code.at(index);
+    const int argCount = cmd.args.count();
+    const int argTypeCount = cmd.argTypes.count();
 
+    ui->codeList->item(index)->setTextColor(QListWidgetItem().textColor());
+
+    QString str = cmd.name + " (";
+    for (int i = 0; i < argCount; ++i)
+    {
+        const ushort val = cmd.args.at(i);
+
+        if (argTypeCount > 0 && (cmd.args.size() == cmd.argTypes.size() || cmd.variableLength))
+        {
+            if (cmd.argTypes.at(i % argTypeCount) == 0 && val < currentWRD.params.size())       // flag/plaintext parameter
+                str += currentWRD.params.at(val);
+            else if (cmd.argTypes.at(i % argTypeCount) == 1)                                    // raw number
+                str += QString::number(val);
+            else if (cmd.argTypes.at(i % argTypeCount) == 2 && val < currentWRD.strings.size()) // dialogue string
+                str += currentWRD.strings.at(val);
+            else if (cmd.argTypes.at(i % argTypeCount) == 3 && val < currentWRD.labels.size())  // label name
+                str += currentWRD.labels.at(val);
+            else
+            {
+                str += "!" + QString::number(val) + "!";
+                ui->codeList->item(index)->setTextColor(Qt::red);
+            }
+        }
+        else
+        {
+            str += "!" + QString::number(val) + "!";
+            ui->codeList->item(index)->setTextColor(Qt::red);
+        }
+
+        if ((i + 1) < cmd.args.count())
+        {
+            // The IFF, WAK, and IFW opcodes look better without commas, trust me.
+            if (cmd.opcode != 0x01 && cmd.opcode != 0x02 && cmd.opcode != 0x03)
+                str += ",";
+
+            str += " ";
+        }
+    }
+    str += ")";
+
+    ui->codeList->item(index)->setText(str);
 }
 
-void MainWindow::on_FileBrowser_activated(const QModelIndex &index)
+void MainWindow::initializeCodeEditor(int index)
+{
+    const WRDCmd cmd = currentWRD.code.at(index);
+
+    // Set the opcode comboBox value to the current command's opcode
+    ui->cbOpcode->setEnabled(true);
+    ui->cbOpcode->blockSignals(true);
+    ui->cbOpcode->setCurrentIndex(cmd.opcode);
+    ui->labelOpcodeIndex->setText("Opcode ID: 0x" + QString::number(cmd.opcode, 16).toUpper().rightJustified(2, '0'));
+    ui->cbOpcode->blockSignals(false);
+
+
+    // Populate the parameter area with the appropriate widget
+    // for each argument.
+    //
+    // TODO: Use a model or something to provide the data, it's definitely
+    // wasteful to copy the same data lists a million times to each widget!
+    //
+    clearParameterArea();
+    for (int a = 0; a < cmd.args.count(); ++a)
+    {
+        const ushort val = cmd.args.at(a);
+
+        if (a >= cmd.argTypes.count() || cmd.argTypes.at(a) == 0)    // plaintext flag parameter
+        {
+            QComboBox *cb = new QComboBox(ui->parameterScrollArea->widget());
+            cb->addItems(currentWRD.params);
+            cb->setCurrentIndex(val);
+            cb->setFocusPolicy(Qt::ClickFocus);
+            cb->installEventFilter(this);
+            ui->parameterScrollArea->widget()->layout()->addWidget(cb);
+            connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_parameterWidget_changed);
+        }
+        else if (cmd.argTypes.at(a) == 1)                           // raw number
+        {
+            QSpinBox *sb = new QSpinBox(ui->parameterScrollArea->widget());
+            sb->setValue(val);
+            sb->setFocusPolicy(Qt::ClickFocus);
+            sb->installEventFilter(this);
+            ui->parameterScrollArea->widget()->layout()->addWidget(sb);
+            connect(sb, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::on_parameterWidget_changed);
+        }
+        else if (cmd.argTypes.at(a) == 2)                           // dialogue string
+        {
+            QComboBox *cb = new QComboBox(ui->parameterScrollArea->widget());
+            cb->addItems(currentWRD.strings);
+            cb->setCurrentIndex(val);
+            cb->setFocusPolicy(Qt::ClickFocus);
+            cb->installEventFilter(this);
+            ui->parameterScrollArea->widget()->layout()->addWidget(cb);
+            connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_parameterWidget_changed);
+        }
+        else if (cmd.argTypes.at(a) == 3)                           // label name
+        {
+            QComboBox *cb = new QComboBox(ui->parameterScrollArea->widget());
+            cb->addItems(currentWRD.labels);
+            cb->setCurrentIndex(val);
+            cb->setFocusPolicy(Qt::ClickFocus);
+            cb->installEventFilter(this);
+            ui->parameterScrollArea->widget()->layout()->addWidget(cb);
+            connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_parameterWidget_changed);
+        }
+    }
+}
+
+/// Delete all existing widgets from the parameter area.
+/// (Here's hoping this won't be buggy or problematic as fuck).
+void MainWindow::clearParameterArea()
+{
+    for (QWidget *child : ui->parameterScrollArea->widget()->findChildren<QWidget*>(QString(), Qt::FindDirectChildrenOnly))
+    {
+        child->disconnect();
+        delete child;
+    }
+}
+
+void MainWindow::on_codeList_activated(const QModelIndex &index)
+{
+    initializeCodeEditor(index.row());
+}
+
+void MainWindow::on_fileBrowser_activated(const QModelIndex &index)
 {
     if (fileBrowserModel->isDir(index) || !fileBrowserModel->fileName(index).endsWith(".spc", Qt::CaseInsensitive))
         return;
@@ -171,12 +258,40 @@ void MainWindow::on_FileBrowser_activated(const QModelIndex &index)
     loadSPCFile(fileBrowserModel->filePath(index));
 }
 
-void MainWindow::on_ScriptBrowser_activated(const QModelIndex &index)
+void MainWindow::on_scriptBrowser_activated(const QModelIndex &index)
 {
     loadScriptData(index.data().toString());
 }
 
-void MainWindow::on_codeList_activated(const QModelIndex &index)
+/// We use this to prevent the command parameter widgets from updating when
+/// you scroll over them with the mouse wheel.
+bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
-    loadCmdInfo(index.row());
+    if (e->type() == QEvent::Wheel)
+        if (qobject_cast<QComboBox *>(obj) || qobject_cast<QSpinBox *>(obj))
+            return true;
+
+    return false;
+}
+
+void MainWindow::on_parameterWidget_changed(int value)
+{
+    if (QObject::sender()->isWidgetType())
+    {
+        const int widgetIndex = ui->parameterScrollArea->widget()->layout()->indexOf((QWidget *)QObject::sender());
+        currentWRD.code[ui->codeList->currentRow()].args[widgetIndex] = (ushort)value;
+        updateCodeListEntry(ui->codeList->currentRow());
+    }
+    return;
+}
+
+void MainWindow::on_cbOpcode_currentIndexChanged(int index)
+{
+    currentWRD.code[ui->codeList->currentRow()].opcode = KNOWN_CMDS[index].opcode;
+    currentWRD.code[ui->codeList->currentRow()].name = KNOWN_CMDS[index].name;
+    currentWRD.code[ui->codeList->currentRow()].argTypes = KNOWN_CMDS[index].argTypes;
+    currentWRD.code[ui->codeList->currentRow()].variableLength = KNOWN_CMDS[index].variableLength;
+    ui->labelOpcodeIndex->setText("Opcode ID: 0x" + QString::number(index, 16).toUpper().rightJustified(2, '0'));
+    updateCodeListEntry(ui->codeList->currentRow());
+    initializeCodeEditor(ui->codeList->currentRow());
 }

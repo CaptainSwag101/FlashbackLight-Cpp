@@ -43,6 +43,7 @@ WRD WRD::fromBytes(QByteArray &bytes)
         // Copy opcode name and argument info from our reference table
         cmd.name = KNOWN_CMDS[cmd.opcode].name;
         cmd.argTypes = KNOWN_CMDS[cmd.opcode].argTypes;
+        cmd.variableLength = KNOWN_CMDS[cmd.opcode].variableLength;
 
         // Read command arguments, if any
         stream.setByteOrder(QDataStream::BigEndian);

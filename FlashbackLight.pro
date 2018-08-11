@@ -28,25 +28,21 @@ SOURCES += \
     formats/wrd.cpp \
     formats/spc.cpp \
     formats/spcentry.cpp \
-    formats/stx.cpp \
-    scripteditor.cpp
+    formats/stx.cpp
 
 HEADERS += \
         mainwindow.h \
     formats/wrd.h \
     formats/spc.h \
-    common.h \
     formats/spcentry.h \
-    formats/stx.h \
-    scripteditor.h
+    formats/stx.h
 
 FORMS += \
-        mainwindow.ui \
-    scripteditor.ui
+        mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-RC_ICONS = FlashbackLight-Transparent.ico
+RC_ICONS = FlashbackLight-Transparent-NoShadow.ico

@@ -5,8 +5,8 @@
 #include <QMainWindow>
 #include <QListWidget>
 #include <QTreeView>
-#include "common.h"
-#include "scripteditor.h"
+#include "formats/spc.h"
+#include "formats/wrd.h"
 
 namespace Ui {
 class MainWindow;
@@ -27,21 +27,26 @@ private:
     void saveSPCFile(QString path = currentSPC.filename);
     void loadScriptData(QString name);
     void saveScriptData(QString name = currentWRD.filename);
-    void loadCmdInfo(const int index);
-    void saveCmdInfo(const int index);
+    void initializeCodeList();
+    void updateCodeListEntry(int index);
+    void initializeCodeEditor(int index);
+    void clearParameterArea();
+
+    static SPC currentSPC;
+    static WRD currentWRD;
+    static QString dataPath;
 
     Ui::MainWindow *ui;
-    QTreeView *fileBrowser;
     QFileSystemModel *fileBrowserModel;
-    QListWidget *scriptBrowser;
-    ScriptEditor *scriptEditor;
-    QFrame *previewer;
 
 
 private slots:
-    void on_FileBrowser_activated(const QModelIndex &index);
-    void on_ScriptBrowser_activated(const QModelIndex &index);
     void on_codeList_activated(const QModelIndex &index);
+    void on_fileBrowser_activated(const QModelIndex &index);
+    void on_scriptBrowser_activated(const QModelIndex &index);
+    bool eventFilter(QObject *obj, QEvent *e);
+    void on_parameterWidget_changed(int value);
+    void on_cbOpcode_currentIndexChanged(int index);
 };
 
 #endif // MAINWINDOW_H
