@@ -9,7 +9,7 @@ struct WRDCmd
 {
     uchar opcode;
     QString name = "UNKNOWN_CMD";
-    QVector<ushort> args;
+    QVector<ushort> argData;
     QVector<uchar> argTypes;   // 0 = flag, 1 = raw number, 2 = string, 3 = label name
     bool variableLength = false;
 };

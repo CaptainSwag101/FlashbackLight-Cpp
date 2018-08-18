@@ -12,7 +12,6 @@ public:
     static SPC fromBytes(QDataStream &stream, int len = -1);
     static QByteArray toBytes(SPC &spc);
 
-    QString filename;
     QByteArray unk1;
     uint unk2;
     QVector<SPCEntry> files;

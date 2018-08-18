@@ -54,7 +54,7 @@ WRD WRD::fromBytes(QByteArray &bytes)
 
             ushort arg;
             stream >> arg;
-            cmd.args.append(arg);
+            cmd.argData.append(arg);
         }
         stream.setByteOrder(QDataStream::LittleEndian);
 
