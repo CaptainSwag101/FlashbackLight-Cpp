@@ -28,14 +28,16 @@ SOURCES += \
     formats/wrd.cpp \
     formats/spc.cpp \
     formats/spcentry.cpp \
-    formats/stx.cpp
+    formats/stx.cpp \
+    formats/wrdcmd.cpp
 
 HEADERS += \
     mainwindow.h \
     formats/wrd.h \
     formats/spc.h \
     formats/spcentry.h \
-    formats/stx.h
+    formats/stx.h \
+    formats/wrdcmd.h
 
 FORMS += \
     mainwindow.ui

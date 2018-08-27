@@ -14,9 +14,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // Populate the opcode combobox with all known opcodes.
     ui->cbOpcode->blockSignals(true);
     ui->cbOpcode->clear();
-    for (const WRDCmd &known : KNOWN_CMDS)
+    for (int i = 0; i < WRDCmd::NAME_LIST->size(); ++i)
     {
-        ui->cbOpcode->addItem(known.name);
+        ui->cbOpcode->addItem(WRDCmd::NAME_LIST->at(i));
     }
     ui->cbOpcode->installEventFilter(this);
     ui->cbOpcode->setEnabled(false);
@@ -171,24 +171,24 @@ void MainWindow::updateCodeListEntry(int index)
 {
     const WRDCmd cmd = currentWRD.code.at(index);
     const int argCount = cmd.argData.count();
-    const int argTypeCount = cmd.argTypes.count();
+    const int argTypeCount = cmd.getArgTypes().count();
 
     ui->codeList->item(index)->setTextColor(QListWidgetItem().textColor());
 
-    QString str = cmd.name + " (";
+    QString str = cmd.getName() + " (";
     for (int i = 0; i < argCount; ++i)
     {
         const ushort val = cmd.argData.at(i);
 
-        if (argTypeCount > 0 && (cmd.argData.size() == cmd.argTypes.size() || cmd.variableLength))
+        if (argTypeCount > 0 && (cmd.argData.size() == cmd.getArgTypes().size() || cmd.isVarLength()))
         {
-            if (cmd.argTypes.at(i % argTypeCount) == 0 && val < currentWRD.params.size())       // flag/plaintext parameter
+            if (cmd.getArgTypes().at(i % argTypeCount) == 0 && val < currentWRD.params.size())       // flag/plaintext parameter
                 str += currentWRD.params.at(val);
-            else if (cmd.argTypes.at(i % argTypeCount) == 1)                                    // raw number
+            else if (cmd.getArgTypes().at(i % argTypeCount) == 1)                                    // raw number
                 str += QString::number(val);
-            else if (cmd.argTypes.at(i % argTypeCount) == 2 && val < currentWRD.strings.size()) // dialogue string
+            else if (cmd.getArgTypes().at(i % argTypeCount) == 2 && val < currentWRD.strings.size()) // dialogue string
                 str += currentWRD.strings.at(val);
-            else if (cmd.argTypes.at(i % argTypeCount) == 3 && val < currentWRD.labels.size())  // label name
+            else if (cmd.getArgTypes().at(i % argTypeCount) == 3 && val < currentWRD.labels.size())  // label name
                 str += currentWRD.labels.at(val);
             else
             {
@@ -239,7 +239,7 @@ void MainWindow::initializeCodeEditor(int index)
     {
         const ushort val = cmd.argData.at(a);
 
-        if (a >= cmd.argTypes.count() || cmd.argTypes.at(a) == 0)   // plaintext flag parameter
+        if (a >= cmd.getArgTypes().count() || cmd.getArgTypes().at(a) == 0)   // plaintext flag parameter
         {
             QComboBox *cb = new QComboBox(ui->parameterScrollArea->widget());
             cb->addItems(currentWRD.params);
@@ -249,7 +249,7 @@ void MainWindow::initializeCodeEditor(int index)
             ui->parameterScrollArea->widget()->layout()->addWidget(cb);
             connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_parameterWidget_changed);
         }
-        else if (cmd.argTypes.at(a) == 1)                           // raw number
+        else if (cmd.getArgTypes().at(a) == 1)                           // raw number
         {
             QSpinBox *sb = new QSpinBox(ui->parameterScrollArea->widget());
             sb->setValue(val);
@@ -258,7 +258,7 @@ void MainWindow::initializeCodeEditor(int index)
             ui->parameterScrollArea->widget()->layout()->addWidget(sb);
             connect(sb, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::on_parameterWidget_changed);
         }
-        else if (cmd.argTypes.at(a) == 2)                           // dialogue string
+        else if (cmd.getArgTypes().at(a) == 2)                           // dialogue string
         {
             QComboBox *cb = new QComboBox(ui->parameterScrollArea->widget());
             cb->addItems(currentWRD.strings);
@@ -268,7 +268,7 @@ void MainWindow::initializeCodeEditor(int index)
             ui->parameterScrollArea->widget()->layout()->addWidget(cb);
             connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_parameterWidget_changed);
         }
-        else if (cmd.argTypes.at(a) == 3)                           // label name
+        else if (cmd.getArgTypes().at(a) == 3)                           // label name
         {
             QComboBox *cb = new QComboBox(ui->parameterScrollArea->widget());
             cb->addItems(currentWRD.labels);
@@ -364,10 +364,7 @@ void MainWindow::on_parameterWidget_changed(int value)
 
 void MainWindow::on_cbOpcode_currentIndexChanged(int index)
 {
-    currentWRD.code[ui->codeList->currentRow()].opcode = KNOWN_CMDS[index].opcode;
-    currentWRD.code[ui->codeList->currentRow()].name = KNOWN_CMDS[index].name;
-    currentWRD.code[ui->codeList->currentRow()].argTypes = KNOWN_CMDS[index].argTypes;
-    currentWRD.code[ui->codeList->currentRow()].variableLength = KNOWN_CMDS[index].variableLength;
+    currentWRD.code[ui->codeList->currentRow()].opcode = index;
     ui->labelOpcodeIndex->setText("Opcode ID: 0x" + QString::number(index, 16).toUpper().rightJustified(2, '0'));
     updateCodeListEntry(ui->codeList->currentRow());
     initializeCodeEditor(ui->codeList->currentRow());
