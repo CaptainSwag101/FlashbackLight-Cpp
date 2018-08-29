@@ -10,8 +10,8 @@ public:
     QVector<uchar> getArgTypes() const;   // 0 = flag, 1 = raw number, 2 = string, 3 = label name
     bool isVarLength() const;
 
-    static const QString NAME_LIST[];
-    static const QVector<uchar> ARGTYPE_LIST[];
+    static const QVector<QString> NAME_LIST;
+    static const QVector<QVector<uchar>> ARGTYPE_LIST;
     uchar opcode;
     QVector<ushort> argData;
 };

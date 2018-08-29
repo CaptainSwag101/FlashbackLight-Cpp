@@ -14,9 +14,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // Populate the opcode combobox with all known opcodes.
     ui->cbOpcode->blockSignals(true);
     ui->cbOpcode->clear();
-    for (int i = 0; i < WRDCmd::NAME_LIST->size(); ++i)
+    for (const QString &string : WRDCmd::NAME_LIST)
     {
-        ui->cbOpcode->addItem(WRDCmd::NAME_LIST->at(i));
+        ui->cbOpcode->addItem(string);
     }
     ui->cbOpcode->installEventFilter(this);
     ui->cbOpcode->setEnabled(false);

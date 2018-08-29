@@ -20,7 +20,7 @@ bool WRDCmd::isVarLength() const
 }
 
 /// Official command names found in game_resident/command_label.dat
-const QString WRDCmd::NAME_LIST[] =
+const QVector<QString> WRDCmd::NAME_LIST =
 {
     "FLG", "IFF", "WAK", "IFW", "SWI", "CAS", "MPF", "SPW", "MOD", "HUM",
     "CHK", "KTD", "CLR", "RET", "KNM", "CAP", "FIL", "END", "SUB", "RTN",
@@ -32,7 +32,7 @@ const QString WRDCmd::NAME_LIST[] =
     "LOC", "BTN", "ENT", "CED", "LBN", "JMN"
 };
 
-const QVector<uchar> WRDCmd::ARGTYPE_LIST[] =
+const QVector<QVector<uchar>> WRDCmd::ARGTYPE_LIST =
 {
     {0,0}, {0,0,0}, {0,0,0}, {0,0,1}, {0}, {1}, {0,0,0}, {}, {0,0,0,0}, {0},
     {0}, {0,0}, {}, {}, {0,0,0,0,0}, {}, {0,0}, {}, {0,0}, {},
