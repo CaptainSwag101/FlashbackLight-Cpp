@@ -119,7 +119,7 @@ WRD WRD::fromBytes(QByteArray &bytes)
         stream.device()->seek(stringsPointer);
         for (ushort i = 0; i < stringCount; ++i)
         {
-            short stringLen;
+            short stringLen = 0;
 
             // The string length is a signed byte, so if it's larger than 0x7F,
             // that means the length is actually stored in a signed short,
@@ -135,11 +135,24 @@ WRD WRD::fromBytes(QByteArray &bytes)
                 stream >> c;
                 stringLen = c;
             }
+            stringLen += 2; // Null terminator
 
-            //ushort *stringData = new ushort[stringLen];
-            ushort *stringData = new ushort[stringLen];
-            stream.device()->read((char *)stringData, stringLen * 2);
-            QString string = QString::fromUtf16(stringData);
+            QChar *stringData = new QChar[stringLen / 2];
+
+            for (int j = 0; j < (stringLen / 2); ++j)
+            {
+                QChar chr = 0;
+                stream >> chr;
+                stringData[j] = chr;
+
+                // We can't always trust stringLen apparently, so break if we've hit a null terminator.
+                if (chr == QChar(0))
+                    break;
+            }
+
+            QString string = QString(stringData);
+            string.replace('\r', "\\r");
+            string.replace('\n', "\\n");
             result.strings.append(string);
             delete[] stringData;
         }
